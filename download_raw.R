@@ -1,4 +1,4 @@
-offsite_dir <- .get_config_path("LOCAL_PAPALEXI_2019_DATA_DIR")
+offsite_dir <- .get_config_path("LOCAL_PAPALEXI_2021_DATA_DIR")
 raw_dir <- paste0(offsite_dir, "raw/")
 count_dir <- paste0(raw_dir, "count/")
 
@@ -29,3 +29,11 @@ file.remove(dests[4])
 for (f in dests[1:3]) {
   R.utils::gunzip(f)
 }
+
+# finally, get the vector of stimulated cells for the SueratData object
+library(Seurat)
+library(SeuratData)
+InstallData(ds = "thp1.eccite")
+eccite <- LoadData(ds = "thp1.eccite")
+stim_cells <- Cells(eccite)
+saveRDS(stim_cells, paste0(raw_dir, "/count/stim_cells.rds"))
