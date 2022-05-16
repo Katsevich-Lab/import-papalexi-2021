@@ -37,7 +37,7 @@ gRNA_counts <- as.matrix(gRNA_modality@counts - 1)[-1,]
 gRNA_odm <- ondisc::create_ondisc_matrix_from_R_matrix(r_matrix = gRNA_counts,
                                                        barcodes = colnames(gRNA_counts),
                                                        features_df = data.frame(row.names(gRNA_counts)),
-                                                       odm_fp = paste0(processed_dir, "gRNA/count_matrix.odm"))
+                                                       odm_fp = paste0(processed_dir, "grna/count_matrix.odm"))
 # extract the target and target type of each gRNA
 gRNA_names <- row.names(gRNA_counts)
 gRNA_targets <- gsub(pattern = "g[0-9]+", replacement = "", x = gRNA_names)
@@ -58,7 +58,7 @@ gRNA_odm_mod <- gRNA_odm |>
                                     target_type = target_type,
                                     known_protein_effect = protein_effect)
 ondisc::save_odm(odm = gRNA_odm_mod,
-                 metadata_fp = paste0(processed_dir, "gRNA/metadata.rds"))
+                 metadata_fp = paste0(processed_dir, "grna/metadata.rds"))
 
 
 ##################
