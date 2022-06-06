@@ -28,7 +28,7 @@ processed_dir <- paste0(papalexi_dir, "processed/")
 list.files(processed_dir)
 ```
 
-    ## [1] "gene"    "gRNA"    "protein"
+    ## [1] "gene"    "grna"    "protein"
 
 We examine these modalities one at a time. Data are available on 20,729
 cells, all of which have been stimulated by the IFN-gamma chemical to
@@ -200,50 +200,20 @@ protein.
 
 # Cell-specific covariates across modalities
 
-Finally, we list the cell-specific covariates of each modality. The
-`gRNA_odm` has the cell covariates `n_nonzero`, `n_umis`, `phase` (for
-cell cycle phase), and `batch` (for sequencing batch).
-
-``` r
-gRNA_odm |> ondisc::get_cell_covariates() |> head()
-```
-
-    ##                     n_nonzero n_umis phase batch
-    ## l1_AAACCTGAGCCAGAAC        15    465    G1 rep_1
-    ## l1_AAACCTGAGTGGACGT         9     79    G1 rep_1
-    ## l1_AAACCTGCATGAGCGA        11    101    G1 rep_1
-    ## l1_AAACCTGTCTTGTCAT        12    132    G1 rep_1
-    ## l1_AAACGGGAGAACAACT        16     87    G1 rep_1
-    ## l1_AAACGGGAGACAGAGA         6     13    G1 rep_1
-
-The `protein_odm` has the same covariates.
-
-``` r
-gRNA_odm |> ondisc::get_cell_covariates() |> head()
-```
-
-    ##                     n_nonzero n_umis phase batch
-    ## l1_AAACCTGAGCCAGAAC        15    465    G1 rep_1
-    ## l1_AAACCTGAGTGGACGT         9     79    G1 rep_1
-    ## l1_AAACCTGCATGAGCGA        11    101    G1 rep_1
-    ## l1_AAACCTGTCTTGTCAT        12    132    G1 rep_1
-    ## l1_AAACGGGAGAACAACT        16     87    G1 rep_1
-    ## l1_AAACGGGAGACAGAGA         6     13    G1 rep_1
-
-Finally, the `gene_odm` has these same covariates, in addition to
-percent mitochondrial reads (`p_mito`).
+The `gene_odm` has covariates `n_nonzero`, `n_umis`, `batch`, `phase`,
+`perturbation`, and `p_mito`. The `perturbation` covariate was obtained
+from the original dataset.
 
 ``` r
 gene_odm |> ondisc::get_cell_covariates() |> head()
 ```
 
-    ##                     n_nonzero n_umis batch phase     p_mito
-    ## l1_AAACCTGAGCCAGAAC      3942  17207 rep_1    G1 0.02295577
-    ## l1_AAACCTGAGTGGACGT      2948   9506 rep_1    G1 0.04512939
-    ## l1_AAACCTGCATGAGCGA      4258  15256 rep_1    G1 0.04116413
-    ## l1_AAACCTGTCTTGTCAT      1780   5135 rep_1    G1 0.05491723
-    ## l1_AAACGGGAGAACAACT      2671   9673 rep_1    G1 0.03359868
-    ## l1_AAACGGGAGACAGAGA      3918  14941 rep_1    G1 0.03379961
+    ##                     n_nonzero n_umis batch phase perturbation     p_mito
+    ## l1_AAACCTGAGCCAGAAC      3942  17207 rep_1    G1      STAT2g2 0.02295577
+    ## l1_AAACCTGAGTGGACGT      2948   9506 rep_1    G1       CAV1g4 0.04512939
+    ## l1_AAACCTGCATGAGCGA      4258  15256 rep_1    G1      STAT1g2 0.04116413
+    ## l1_AAACCTGTCTTGTCAT      1780   5135 rep_1    G1       CD86g1 0.05491723
+    ## l1_AAACGGGAGAACAACT      2671   9673 rep_1    G1       IRF7g2 0.03359868
+    ## l1_AAACGGGAGACAGAGA      3918  14941 rep_1    G1         NTg1 0.03379961
 
-We might want to think about how to avoid replicating covariates across
-modalities, but this should be OK for now.
+The other modalities (gRNA, protein) have the same covariates.

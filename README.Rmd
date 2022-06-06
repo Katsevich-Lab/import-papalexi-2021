@@ -111,22 +111,10 @@ The genes that encode proteins CD86, PDL1, and PDL2 were all perturbed. The gene
 
 # Cell-specific covariates across modalities
 
-Finally, we list the cell-specific covariates of each modality. The `gRNA_odm` has the cell covariates `n_nonzero`, `n_umis`, `phase` (for cell cycle phase), and `batch` (for sequencing batch).
-
-```{r}
-gRNA_odm |> ondisc::get_cell_covariates() |> head()
-```
-
-The `protein_odm` has the same covariates.
-
-```{r}
-gRNA_odm |> ondisc::get_cell_covariates() |> head()
-```
-
-Finally, the `gene_odm` has these same covariates, in addition to percent mitochondrial reads (`p_mito`).
+The `gene_odm` has covariates `n_nonzero`, `n_umis`, `batch`, `phase`, `perturbation`, and `p_mito`. The `perturbation` covariate was obtained from the original dataset.
 
 ```{r}
 gene_odm |> ondisc::get_cell_covariates() |> head()
 ```
 
-We might want to think about how to avoid replicating covariates across modalities, but this should be OK for now.
+The other modalities (gRNA, protein) have the same covariates.
