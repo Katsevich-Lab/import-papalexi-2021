@@ -1,18 +1,16 @@
 offsite_dir <- .get_config_path("LOCAL_PAPALEXI_2021_DATA_DIR")
 processed_dir <- paste0(offsite_dir, "processed/")
+raw_dir <- paste0(offsite_dir, "raw/")
 
 # load the Seurat data object; wrangle the most important metadata features
-SeuratData::InstallData("thp1.eccite")
 eccite_obj <- SeuratData::LoadData(ds = "thp1.eccite")
 key_covariates <- eccite_obj@meta.data |>
   dplyr::select(MULTI_classification.global, Phase, percent.mito, guide_ID) |>
   dplyr::rename("batch" = "MULTI_classification.global",
-                "phase" = "Phase",
-                "perturbation" = "guide_ID") |>
+                "phase" = "Phase") |>
   dplyr::mutate(p_mito = percent.mito/100, percent.mito = NULL,
                 batch = factor(x = batch, levels = c("rep1-tx", "rep2-tx", "rep3-tx"),
                                labels = c("rep_1", "rep_2", "rep_3")))
-
 
 ##################
 # 1. gene modality
@@ -27,7 +25,6 @@ gene_odm <- ondisc::create_ondisc_matrix_from_R_matrix(r_matrix = gene_counts,
 gene_odm_mod <- gene_odm |> ondisc::mutate_cell_covariates(key_covariates)
 ondisc::save_odm(odm = gene_odm_mod, metadata_fp = paste0(processed_dir, "gene/metadata.rds"))
 
-
 ##################
 # 2. gRNA modality
 ##################
@@ -40,7 +37,7 @@ gRNA_counts <- as.matrix(gRNA_modality@counts - 1)[-1,]
 gRNA_odm <- ondisc::create_ondisc_matrix_from_R_matrix(r_matrix = gRNA_counts,
                                                        barcodes = colnames(gRNA_counts),
                                                        features_df = data.frame(row.names(gRNA_counts)),
-                                                       odm_fp = paste0(processed_dir, "grna/count_matrix.odm"))
+                                                       odm_fp = paste0(processed_dir, "grna_expression/count_matrix.odm"))
 # extract the target and target type of each gRNA
 gRNA_names <- row.names(gRNA_counts)
 gRNA_targets <- gsub(pattern = "g[0-9]+", replacement = "", x = gRNA_names)
@@ -60,12 +57,11 @@ gRNA_odm_mod <- gRNA_odm |>
                                     target_type = target_type,
                                     known_protein_effect = protein_effect)
 ondisc::save_odm(odm = gRNA_odm_mod,
-                 metadata_fp = paste0(processed_dir, "grna/metadata.rds"))
+                 metadata_fp = paste0(processed_dir, "grna_expression/metadata.rds"))
 
-
-##################
-# protein modality
-##################
+#####################
+# 3. protein modality
+#####################
 protein_modality <- eccite_obj[["ADT"]]
 protein_counts <- as.matrix(protein_modality@counts)
 protein_odm <- ondisc::create_ondisc_matrix_from_R_matrix(r_matrix = protein_counts,
@@ -74,12 +70,14 @@ protein_odm <- ondisc::create_ondisc_matrix_from_R_matrix(r_matrix = protein_cou
                                                           odm_fp = paste0(processed_dir, "protein/count_matrix.odm"),
                                                           metadata_fp = paste0(processed_dir, "protein/metadata.rds"))
 
-# protein_odm <- ondisc::read_odm(odm_fp = paste0(processed_dir, "protein/count_matrix.odm"),
-# metadata_fp = paste0(processed_dir, "protein/metadata.rds"))
-
 # add the covariates batch, cell cycle; also, add the gene that each protein is encoded by
 protein_odm_mod <- protein_odm |>
   ondisc::mutate_cell_covariates(key_covariates) |>
   ondisc::mutate_feature_covariates(encoded_by = c("CD86", "CD274", "PDCD1LG2", "HAVCR2"))
 ondisc::save_odm(odm = protein_odm_mod, metadata_fp = paste0(processed_dir, "protein/metadata.rds"))
 
+##################################
+# 4. save perturbation assignments
+##################################
+perturbation_assignment <- eccite_obj$guide_ID |> as.character()
+saveRDS(perturbation_assignment, paste0(raw_dir, "perturbation_assignments.rds"))

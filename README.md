@@ -15,9 +15,9 @@ final of these experiments (i.e., the at-scale ECCITE-seq experiment).
 The top-level offsite `papalexi_2021` data directory contains two
 subdirectories: `processed` and `raw`. The `raw` subdirectory contains
 the raw data, and the `processed` subdirectory contains the processed
-data in ODM format. There are three subdirectories in the `processed`
-subdirectory, each corresponding to a diffrent modality: gene, gRNA, and
-protein.
+data in ODM format. There are four subdirectories in the `processed`
+subdirectory, each corresponding to a diffrent modality: gene, gRNA
+(expressions), gRNA (assignments), and protein.
 
 ``` r
 # top-level directory
@@ -28,13 +28,13 @@ processed_dir <- paste0(papalexi_dir, "processed/")
 list.files(processed_dir)
 ```
 
-    ## [1] "gene"    "grna"    "protein"
+    ## [1] "gene"            "grna_assignment" "grna_expression" "protein"
 
 We examine these modalities one at a time. Data are available on 20,729
 cells, all of which have been stimulated by the IFN-gamma chemical to
 upregulate expression of the protein PD-L1.
 
-# gRNA
+# gRNA (expressions)
 
 The data contain 110 gRNAs. (The data originally contained 111 gRNAs, as
 reported in the paper, but one of the gRNAs exhibited zero expression
@@ -45,21 +45,21 @@ with NTg6 apparently missing.
 
 ``` r
 # load gRNA odm; save to gRNA_odm
-gRNA_odm <- ondisc::read_odm(odm_fp = paste0(processed_dir, "gRNA/count_matrix.odm"),
-                             metadata_fp = paste0(processed_dir, "gRNA/metadata.rds"))
+gRNA_odm_exp <- ondisc::read_odm(odm_fp = paste0(processed_dir, "grna_expression/count_matrix.odm"),
+                             metadata_fp = paste0(processed_dir, "grna_expression/metadata.rds"))
 ```
 
-The `feature_covariates` matrix of `gRNA_odm` contains columns `target`,
-`target_type`, and `known_protein_effect`. `target` lists the gene that
-each gRNA targets. `target_type`, meanwhile, gives the type of target of
-each gRNA (either `gene` or `non-targeting`). Finally,
+The `feature_covariates` matrix of `gRNA_odm_exp` contains columns
+`target`, `target_type`, and `known_protein_effect`. `target` lists the
+gene that each gRNA targets. `target_type`, meanwhile, gives the type of
+target of each gRNA (either `gene` or `non-targeting`). Finally,
 `known_protein_effect` gives the protein that is encoded by a given
 targeted gene (for genes whose encoded proteins were sequenced; NA
 otherwise).
 
 ``` r
 # print several feature covariates of gRNA modality
-gRNA_odm |>
+gRNA_odm_exp |>
   ondisc::get_feature_covariates() |>
   head() |> dplyr::select(target, target_type, known_protein_effect)
 ```
@@ -74,7 +74,7 @@ gRNA_odm |>
 
 ``` r
 # create a table of the gRNA targets
-gRNA_odm |>
+gRNA_odm_exp |>
   ondisc::get_feature_covariates() |>
   dplyr::pull(target) |>
   table()
@@ -96,7 +96,7 @@ gRNA_odm |>
 
 ``` r
 # create a table of the target types
-gRNA_odm |>
+gRNA_odm_exp |>
   ondisc::get_feature_covariates() |>
   dplyr::pull(target_type) |>
   table()
@@ -108,7 +108,7 @@ gRNA_odm |>
 
 ``` r
 # create a table of the known protein effects
-gRNA_odm |> ondisc::get_feature_covariates() |>
+gRNA_odm_exp |> ondisc::get_feature_covariates() |>
   dplyr::pull(known_protein_effect) |>
   stringr::str_replace_na() |>
   table()
@@ -129,11 +129,12 @@ gene_odm <- ondisc::read_odm(odm_fp = paste0(processed_dir, "gene/expression_mat
 ```
 
 The gene modality is linked to the gRNA modality by the `target` column
-of the `feature_covariates` matrix of `gRNA_odm`, as described above.
-The `target` column is a subset of the `feature_ids` of `gene_odm`.
+of the `feature_covariates` matrix of `gRNA_odm_exp`, as described
+above. The `target` column is a subset of the `feature_ids` of
+`gene_odm`.
 
 ``` r
-gRNA_target_genes <- gRNA_odm |> ondisc::get_feature_covariates() |>
+gRNA_target_genes <- gRNA_odm_exp |> ondisc::get_feature_covariates() |>
   dplyr::filter(target_type == "gene") |>
   dplyr::pull(target)
 
@@ -179,13 +180,13 @@ all((protein_odm |>
     ## [1] TRUE
 
 Second, as described above, the `feature_covariates` data frame of
-`gRNA_odm` contains a column called `known_protein_effect`, which, for
-genes that encode one of the sequenced proteins, lists the encoded
+`gRNA_odm_exp` contains a column called `known_protein_effect`, which,
+for genes that encode one of the sequenced proteins, lists the encoded
 protein (`NA` otherwise). The column `known_protein_effect` is a subset
 of the `feature_ids` of the `protein_odm`.
 
 ``` r
-all((gRNA_odm |> ondisc::get_feature_covariates() |>
+all((gRNA_odm_exp |> ondisc::get_feature_covariates() |>
     na.omit() |>
   dplyr::pull(known_protein_effect)) %in% ondisc::get_feature_ids(protein_odm))
 ```
@@ -198,22 +199,47 @@ perturbed, as far as I can tell. The protein CD366 is not mentioned
 anywhere in the manuscript, so it probably is safe to ignore this
 protein.
 
+# gRNA (assignments)
+
+The gRNA assignment matrix is a binary version of the gRNA expression
+matrix, where the cell-to-gRNA assignments were called by the original
+authors.
+
+``` r
+gRNA_odm_assign <- ondisc::read_odm(odm_fp = paste0(processed_dir, "grna_assignment/assignment_matrix.odm"),
+                                    metadata_fp = paste0(processed_dir, "grna_assignment/metadata.rds"))
+gRNA_odm_assign[[80:90, 1:5]]
+```
+
+    ## 11 x 5 sparse Matrix of class "lgCMatrix"
+    ##                
+    ##  [1,] . . . . .
+    ##  [2,] . . . . .
+    ##  [3,] . . . . .
+    ##  [4,] . . . . .
+    ##  [5,] . . . . .
+    ##  [6,] . . | . .
+    ##  [7,] . . . . .
+    ##  [8,] . . . . .
+    ##  [9,] . . . . .
+    ## [10,] | . . . .
+    ## [11,] . . . . .
+
 # Cell-specific covariates across modalities
 
 The `gene_odm` has covariates `n_nonzero`, `n_umis`, `batch`, `phase`,
-`perturbation`, and `p_mito`. The `perturbation` covariate was obtained
-from the original dataset.
+and `p_mito`.
 
 ``` r
 gene_odm |> ondisc::get_cell_covariates() |> head()
 ```
 
-    ##                     n_nonzero n_umis batch phase perturbation     p_mito
-    ## l1_AAACCTGAGCCAGAAC      3942  17207 rep_1    G1      STAT2g2 0.02295577
-    ## l1_AAACCTGAGTGGACGT      2948   9506 rep_1    G1       CAV1g4 0.04512939
-    ## l1_AAACCTGCATGAGCGA      4258  15256 rep_1    G1      STAT1g2 0.04116413
-    ## l1_AAACCTGTCTTGTCAT      1780   5135 rep_1    G1       CD86g1 0.05491723
-    ## l1_AAACGGGAGAACAACT      2671   9673 rep_1    G1       IRF7g2 0.03359868
-    ## l1_AAACGGGAGACAGAGA      3918  14941 rep_1    G1         NTg1 0.03379961
+    ##                     n_nonzero n_umis batch phase guide_ID     p_mito
+    ## l1_AAACCTGAGCCAGAAC      3942  17207 rep_1    G1  STAT2g2 0.02295577
+    ## l1_AAACCTGAGTGGACGT      2948   9506 rep_1    G1   CAV1g4 0.04512939
+    ## l1_AAACCTGCATGAGCGA      4258  15256 rep_1    G1  STAT1g2 0.04116413
+    ## l1_AAACCTGTCTTGTCAT      1780   5135 rep_1    G1   CD86g1 0.05491723
+    ## l1_AAACGGGAGAACAACT      2671   9673 rep_1    G1   IRF7g2 0.03359868
+    ## l1_AAACGGGAGACAGAGA      3918  14941 rep_1    G1     NTg1 0.03379961
 
 The other modalities (gRNA, protein) have the same covariates.

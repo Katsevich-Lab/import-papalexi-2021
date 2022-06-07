@@ -9,7 +9,7 @@ output: github_document
 
 This repository contains code to import and process the Papalexi 2021 data. Papalexi 2021 conducted many experiments, including flow cytommetry, bulk RNA-seq, CITE-seq, pilot ECCITE-seq, and at-scale ECCITE-seq experiments. Their GEO repository contains data only from the final three experiments. This repository processes data only from the final of these experiments (i.e., the at-scale ECCITE-seq experiment).
 
-The top-level offsite `papalexi_2021` data directory contains two subdirectories: `processed` and `raw`. The `raw` subdirectory contains the raw data, and the `processed` subdirectory contains the processed data in ODM format. There are three subdirectories in the `processed` subdirectory, each corresponding to a diffrent modality: gene, gRNA, and protein.
+The top-level offsite `papalexi_2021` data directory contains two subdirectories: `processed` and `raw`. The `raw` subdirectory contains the raw data, and the `processed` subdirectory contains the processed data in ODM format. There are four subdirectories in the `processed` subdirectory, each corresponding to a diffrent modality: gene, gRNA (expressions), gRNA (assignments), and protein.
 
 ```{r}
 # top-level directory
@@ -22,38 +22,38 @@ list.files(processed_dir)
 
 We examine these modalities one at a time. Data are available on 20,729 cells, all of which have been stimulated by the IFN-gamma chemical to upregulate expression of the protein PD-L1.
 
-# gRNA
+# gRNA (expressions)
 
 The data contain 110 gRNAs. (The data originally contained 111 gRNAs, as reported in the paper, but one of the gRNAs exhibited zero expression across all cells, so I removed it.) The gRNAs either target genes or are non-targeting. Each gene is targeted by 3-4 gRNAs. Meanwhile, there are 9 non-targeting gRNAs. The non-targeting gRNAs are labeled NTg1 -- NTg10, with NTg6 apparently missing.
 
 ```{r}
 # load gRNA odm; save to gRNA_odm
-gRNA_odm <- ondisc::read_odm(odm_fp = paste0(processed_dir, "gRNA/count_matrix.odm"),
-                             metadata_fp = paste0(processed_dir, "gRNA/metadata.rds"))
+gRNA_odm_exp <- ondisc::read_odm(odm_fp = paste0(processed_dir, "grna_expression/count_matrix.odm"),
+                             metadata_fp = paste0(processed_dir, "grna_expression/metadata.rds"))
 ```
 
-The `feature_covariates` matrix of `gRNA_odm` contains columns `target`, `target_type`, and `known_protein_effect`. `target` lists the gene that each gRNA targets. `target_type`, meanwhile, gives the type of target of each gRNA (either `gene` or `non-targeting`). Finally, `known_protein_effect` gives the protein that is encoded by a given targeted gene (for genes whose encoded proteins were sequenced; NA otherwise).
+The `feature_covariates` matrix of `gRNA_odm_exp` contains columns `target`, `target_type`, and `known_protein_effect`. `target` lists the gene that each gRNA targets. `target_type`, meanwhile, gives the type of target of each gRNA (either `gene` or `non-targeting`). Finally, `known_protein_effect` gives the protein that is encoded by a given targeted gene (for genes whose encoded proteins were sequenced; NA otherwise).
 
 ```{r}
 # print several feature covariates of gRNA modality
-gRNA_odm |>
+gRNA_odm_exp |>
   ondisc::get_feature_covariates() |>
   head() |> dplyr::select(target, target_type, known_protein_effect)
 
 # create a table of the gRNA targets
-gRNA_odm |>
+gRNA_odm_exp |>
   ondisc::get_feature_covariates() |>
   dplyr::pull(target) |>
   table()
 
 # create a table of the target types
-gRNA_odm |>
+gRNA_odm_exp |>
   ondisc::get_feature_covariates() |>
   dplyr::pull(target_type) |>
   table()
 
 # create a table of the known protein effects
-gRNA_odm |> ondisc::get_feature_covariates() |>
+gRNA_odm_exp |> ondisc::get_feature_covariates() |>
   dplyr::pull(known_protein_effect) |>
   stringr::str_replace_na() |>
   table()
@@ -69,10 +69,10 @@ gene_odm <- ondisc::read_odm(odm_fp = paste0(processed_dir, "gene/expression_mat
                              metadata_fp = paste0(processed_dir, "gene/metadata.rds"))
 ```
 
-The gene modality is linked to the gRNA modality by the `target` column of the `feature_covariates` matrix of `gRNA_odm`, as described above. The `target` column is a subset of the `feature_ids` of `gene_odm`.
+The gene modality is linked to the gRNA modality by the `target` column of the `feature_covariates` matrix of `gRNA_odm_exp`, as described above. The `target` column is a subset of the `feature_ids` of `gene_odm`.
 
 ```{r}
-gRNA_target_genes <- gRNA_odm |> ondisc::get_feature_covariates() |>
+gRNA_target_genes <- gRNA_odm_exp |> ondisc::get_feature_covariates() |>
   dplyr::filter(target_type == "gene") |>
   dplyr::pull(target)
 
@@ -99,19 +99,29 @@ all((protein_odm |>
     dplyr::pull()) %in% ondisc::get_feature_ids(gene_odm))
 ```
 
-Second, as described above, the `feature_covariates` data frame of `gRNA_odm` contains a column called `known_protein_effect`, which, for genes that encode one of the sequenced proteins, lists the encoded protein (`NA` otherwise). The column `known_protein_effect` is a subset of the `feature_ids` of the `protein_odm`.
+Second, as described above, the `feature_covariates` data frame of `gRNA_odm_exp` contains a column called `known_protein_effect`, which, for genes that encode one of the sequenced proteins, lists the encoded protein (`NA` otherwise). The column `known_protein_effect` is a subset of the `feature_ids` of the `protein_odm`.
 
 ```{r}
-all((gRNA_odm |> ondisc::get_feature_covariates() |>
+all((gRNA_odm_exp |> ondisc::get_feature_covariates() |>
     na.omit() |>
   dplyr::pull(known_protein_effect)) %in% ondisc::get_feature_ids(protein_odm))
 ```
 
 The genes that encode proteins CD86, PDL1, and PDL2 were all perturbed. The gene that encodes CD366 (i.e., *HAVCR2*), by contrast, was *not* perturbed, as far as I can tell. The protein CD366 is not mentioned anywhere in the manuscript, so it probably is safe to ignore this protein.
 
+# gRNA (assignments)
+
+The gRNA assignment matrix is a binary version of the gRNA expression matrix, where the cell-to-gRNA assignments were called by the original authors.
+
+```{r}
+gRNA_odm_assign <- ondisc::read_odm(odm_fp = paste0(processed_dir, "grna_assignment/assignment_matrix.odm"),
+                                    metadata_fp = paste0(processed_dir, "grna_assignment/metadata.rds"))
+gRNA_odm_assign[[80:90, 1:5]]
+```
+
 # Cell-specific covariates across modalities
 
-The `gene_odm` has covariates `n_nonzero`, `n_umis`, `batch`, `phase`, `perturbation`, and `p_mito`. The `perturbation` covariate was obtained from the original dataset.
+The `gene_odm` has covariates `n_nonzero`, `n_umis`, `batch`, `phase`, and `p_mito`.
 
 ```{r}
 gene_odm |> ondisc::get_cell_covariates() |> head()
