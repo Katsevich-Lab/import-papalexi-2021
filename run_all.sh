@@ -1,4 +1,5 @@
 # runs all downloading and processing scripts
+# required R packages: Seurat, SeuratData, ondisc, dplyr, 
 
 hpcc=$(hostname | grep "hpcc" | wc -l)
 if [[ hpcc ]]
