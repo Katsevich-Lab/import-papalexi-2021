@@ -6,6 +6,7 @@ processed_dir <- paste0(offsite_dir, "processed/")
 processed_subdirs <- paste0(processed_dir, c("gene", "grna_expression", "grna_assignment", "protein"), "/")
 counts_dir <- paste0(raw_dir, "count")
 
+if (!dir.exists(offsite_dir)) dir.create(offsite_dir)
 if (!dir.exists(raw_dir)) dir.create(raw_dir)
 if (!dir.exists(processed_dir)) dir.create(processed_dir)
 if (!dir.exists(counts_dir)) dir.create(counts_dir)
