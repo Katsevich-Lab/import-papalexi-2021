@@ -9,7 +9,7 @@ key_covariates <- eccite_obj@meta.data |>
   dplyr::rename("batch" = "MULTI_classification.global",
                 "phase" = "Phase") |>
   dplyr::mutate(p_mito = percent.mito/100, percent.mito = NULL,
-                batch = factor(x = batch, levels = c("rep1-tx", "rep2-tx", "rep3-tx"),
+                batch = factor(x = batch, levels = c("rep1-tx", "rep3-tx", "rep4-tx"),
                                labels = c("rep_1", "rep_2", "rep_3")))
 
 ##################

@@ -5,7 +5,6 @@ raw_dir <- paste0(offsite_dir, "raw/")
 # load the gRNA-to-cell assignments
 assignments <- readRDS(paste0(raw_dir, "perturbation_assignments.rds")) |> as.list()
 
-
 # load the cell barcodes and gRNA IDs
 grna_expression_odm <- ondisc::read_odm(odm_fp = paste0(processed_dir, "grna_expression/count_matrix.odm"),
                                         metadata_fp = paste0(processed_dir, "grna_expression/metadata.rds"))
