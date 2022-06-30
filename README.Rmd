@@ -121,7 +121,7 @@ gRNA_odm_assign[[80:90, 1:5]]
 
 # Cell-specific covariates across modalities
 
-The `gene_odm` has covariates `n_nonzero`, `n_umis`, `batch`, `phase`, and `p_mito`.
+The `gene_odm` has covariates `n_nonzero`, `n_umis`, `lane`, `bio_rep`, `phase`, and `p_mito`.
 
 ```{r}
 gene_odm |> ondisc::get_cell_covariates() |> head()

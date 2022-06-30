@@ -227,19 +227,19 @@ gRNA_odm_assign[[80:90, 1:5]]
 
 # Cell-specific covariates across modalities
 
-The `gene_odm` has covariates `n_nonzero`, `n_umis`, `batch`, `phase`,
-and `p_mito`.
+The `gene_odm` has covariates `n_nonzero`, `n_umis`, `lane`, `bio_rep`,
+`phase`, and `p_mito`.
 
 ``` r
 gene_odm |> ondisc::get_cell_covariates() |> head()
 ```
 
-    ##                     n_nonzero n_umis batch phase guide_ID     p_mito
-    ## l1_AAACCTGAGCCAGAAC      3942  17207 rep_1    G1  STAT2g2 0.02295577
-    ## l1_AAACCTGAGTGGACGT      2948   9506 rep_1    G1   CAV1g4 0.04512939
-    ## l1_AAACCTGCATGAGCGA      4258  15256 rep_1    G1  STAT1g2 0.04116413
-    ## l1_AAACCTGTCTTGTCAT      1780   5135 rep_1    G1   CD86g1 0.05491723
-    ## l1_AAACGGGAGAACAACT      2671   9673 rep_1    G1   IRF7g2 0.03359868
-    ## l1_AAACGGGAGACAGAGA      3918  14941 rep_1    G1     NTg1 0.03379961
+    ##                     n_nonzero n_umis  lane bio_rep phase     p_mito
+    ## l1_AAACCTGAGCCAGAAC      3942  17207 Lane1   rep_1    G1 0.02295577
+    ## l1_AAACCTGAGTGGACGT      2948   9506 Lane1   rep_1    G1 0.04512939
+    ## l1_AAACCTGCATGAGCGA      4258  15256 Lane1   rep_1    G1 0.04116413
+    ## l1_AAACCTGTCTTGTCAT      1780   5135 Lane1   rep_1    G1 0.05491723
+    ## l1_AAACGGGAGAACAACT      2671   9673 Lane1   rep_1    G1 0.03359868
+    ## l1_AAACGGGAGACAGAGA      3918  14941 Lane1   rep_1    G1 0.03379961
 
 The other modalities (gRNA, protein) have the same covariates.
