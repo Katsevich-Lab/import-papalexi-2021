@@ -81,10 +81,10 @@ grna_tbl <- grna_expression_odm |>
   ondisc::get_feature_covariates() |>
   dplyr::select(target, target_type, known_protein_effect)
 
-# create the sparse gRNA assignment ODM
+# create the sparse grna assignment ODM
 ondisc::convert_assign_list_to_sparse_odm(cell_barcodes = cell_barcodes,
-                                          gRNA_ids = grna_ids,
-                                          gRNA_assignment_list = perturbation_assignment,
+                                          grna_ids = grna_ids,
+                                          grna_assignment_list = perturbation_assignment,
                                           odm_fp = paste0(processed_dir, "grna_assignment/assignment_matrix.odm"),
                                           metadata_fp = paste0(processed_dir, "grna_assignment/metadata.rds"),
                                           features_metadata_df = grna_tbl)
