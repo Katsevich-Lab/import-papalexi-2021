@@ -1,6 +1,6 @@
 # required R packages: Seurat, SeuratData, ondisc, dplyr,
 
-#$ -l m_mem_free=250G
+#$ -l m_mem_free=16G
 
 hpcc=$(hostname | grep "hpcc" | wc -l)
 if [[ hpcc ]]
